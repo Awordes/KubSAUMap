@@ -12,12 +12,10 @@ import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.app_bar_main.*
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import android.widget.ToggleButton
-import kotlinx.android.synthetic.main.content_main.*
 import org.jeo.map.Layer
 import org.jeo.map.Style
 import org.jeo.vector.VectorDataset
@@ -50,8 +48,8 @@ import java.io.*
 import java.util.*
 
 class MainActivity : AppCompatActivity(),
-        ItemizedLayer.OnItemGestureListener<MarkerItem>,
-        NavigationView.OnNavigationItemSelectedListener {
+        ItemizedLayer.OnItemGestureListener<MarkerItem>
+        /*NavigationView.OnNavigationItemSelectedListener*/ {
 
     ////////////////////////////////////////
     private var mMapView: MapView? = null
@@ -84,7 +82,7 @@ class MainActivity : AppCompatActivity(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
+        //setSupportActionBar(toolbar)
 
 
         fab.setOnClickListener { view ->
@@ -164,7 +162,7 @@ class MainActivity : AppCompatActivity(),
         //mMap!!.layers().add(locationLayer)
         ////////////////////////////////////////
     }
-
+/*
     override fun onBackPressed() {
         if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
             drawer_layout.closeDrawer(GravityCompat.START)
@@ -187,8 +185,8 @@ class MainActivity : AppCompatActivity(),
             R.id.action_settings -> return true
             else -> return super.onOptionsItemSelected(item)
         }
-    }
-
+    }*/
+/*
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         // Handle navigation view item clicks here.
         when (item.itemId) {
@@ -214,7 +212,7 @@ class MainActivity : AppCompatActivity(),
 
         drawer_layout.closeDrawer(GravityCompat.START)
         return true
-    }
+    }*/
 
     @Throws (IOException::class)
     private fun copyFile(inputStream:InputStream, outputStream:OutputStream) {

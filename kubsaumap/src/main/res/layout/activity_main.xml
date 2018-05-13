@@ -1,28 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/drawer_layout"
+    android:id="@+id/sliding_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:openDrawer="start">
+    tools:openDrawer="start"
+    tools:context=".MainActivity">
 
-    <include
-        layout="@layout/app_bar_main"
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <!--Навигация слева
-    <android.support.design.widget.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:layout_marginBottom="0dp"
-        android:background="@android:color/background_light"
-        android:fitsSystemWindows="true"
-        app:headerLayout="@layout/nav_header_main"
-        app:menu="@menu/activity_main_drawer" />-->
+        android:gravity="bottom"
+        app:umanoPanelHeight="20dp"
+        app:umanoShadowHeight="4dp"
+        app:umanoFadeColor="@android:color/transparent">
+
+        <android.support.design.widget.CoordinatorLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <org.oscim.android.MapView
+                    android:id="@+id/mapView"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentTop="true"
+                    android:alpha="0.7"
+                    android:gravity="center|end"
+                    android:orientation="vertical">
+
+                    <Button
+                        android:id="@+id/buttonFloor3"
+                        style="@android:style/Widget.DeviceDefault.Light.Button.Borderless.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/buttonFloorMargin"
+                        android:background="@android:color/background_light"
+                        android:onClick="onClick"
+                        android:text="@string/buttonFloor3"
+                        android:textColor="@android:color/black" />
+
+                    <Button
+                        android:id="@+id/buttonFloor2"
+                        style="@android:style/Widget.DeviceDefault.Light.Button.Borderless.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/buttonFloorMargin"
+                        android:background="@android:color/background_light"
+                        android:onClick="onClick"
+                        android:text="@string/buttonFloor2"
+                        android:textColor="@android:color/black" />
+
+                    <Button
+                        android:id="@+id/buttonFloor1"
+                        style="@android:style/Widget.DeviceDefault.Light.Button.Borderless.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/buttonFloorMargin"
+                        android:background="@android:color/background_light"
+                        android:onClick="onClick"
+                        android:text="@string/buttonFloor1"
+                        android:textColor="@android:color/black" />
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="@dimen/floatButtonMargin"
+                app:backgroundTint="@android:color/white"
+                app:srcCompat="@drawable/ic_simple_logo"/>
+
+        </android.support.design.widget.CoordinatorLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="200dp">
+
+            <SearchView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+            </SearchView>
+
+        </RelativeLayout>
+
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 
 </android.support.v4.widget.DrawerLayout>

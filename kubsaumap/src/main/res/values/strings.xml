@@ -1,14 +1,11 @@
 <resources>
     <string name="app_name">KubSAUMap</string>
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Android Studio</string>
-    <string name="nav_header_subtitle">android.studio@android.com</string>
-    <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
     <string name="buttonFloor1">1</string>
     <string name="buttonFloor2">2</string>
     <string name="buttonFloor3">3</string>
     <string name="buttonFloor4">4</string>
     <string name="buttonFloor5">5</string>
+    <string name="buttonFloor6">6</string>
+    <string name="buttonFloor7">7</string>
 </resources>
