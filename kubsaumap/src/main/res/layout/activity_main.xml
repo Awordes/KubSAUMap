@@ -15,7 +15,7 @@
         android:layout_height="match_parent"
         android:gravity="bottom"
         app:umanoPanelHeight="20dp"
-        app:umanoShadowHeight="4dp"
+        app:umanoShadowHeight="5dp"
         app:umanoFadeColor="@android:color/transparent">
 
         <android.support.design.widget.CoordinatorLayout
