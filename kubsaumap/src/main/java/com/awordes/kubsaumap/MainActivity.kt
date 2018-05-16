@@ -5,33 +5,24 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.support.design.widget.NavigationView
-import android.support.v4.view.GravityCompat
-import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuItem
 import kotlinx.android.synthetic.main.activity_main.*
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.SearchView
 import android.widget.Toast
-import android.widget.ToggleButton
-import org.jeo.map.Layer
 import org.jeo.map.Style
 import org.jeo.vector.VectorDataset
+import org.json.JSONArray
+import org.json.JSONObject
 import org.oscim.android.MapPreferences
 import org.oscim.android.MapView
 import org.oscim.map.Map
-import org.oscim.layers.LocationLayer
-import org.oscim.layers.TileGridLayer
 import org.oscim.layers.tile.vector.VectorTileLayer
 import org.oscim.tiling.source.mapfile.MapFileTileSource
 import org.slf4j.LoggerFactory
-import org.oscim.android.cache.TileCache
-import org.oscim.core.BoundingBox
-import org.oscim.core.GeoPoint
 import org.oscim.core.MapPosition
-import org.oscim.core.MercatorProjection
 import org.oscim.event.Gesture
 import org.oscim.event.GestureListener
 import org.oscim.event.MotionEvent
@@ -43,13 +34,13 @@ import org.oscim.test.JeoTest
 import org.oscim.theme.VtmThemes
 import org.oscim.utils.IOUtils
 import org.oscim.theme.styles.TextStyle
-import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import java.io.*
 import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity(),
-        ItemizedLayer.OnItemGestureListener<MarkerItem>
-        /*NavigationView.OnNavigationItemSelectedListener*/ {
+        ItemizedLayer.OnItemGestureListener<MarkerItem>,
+        SearchView.OnQueryTextListener {
 
     ////////////////////////////////////////
     private var mMapView: MapView? = null
@@ -57,48 +48,31 @@ class MainActivity : AppCompatActivity(),
     private var mPref: MapPreferences? = null
     ////////////////////////////////////////
 
-    //MyLocationListener
 
     ////////////////////////////////////////
     private val log = LoggerFactory.getLogger(MainActivity::class.java)
-    private val USE_CACHE = false
-
     private var mBaseLayer: VectorTileLayer? = null
     private var mTileSource: MapFileTileSource? = null
-    private var mGridLayer: TileGridLayer? = null
-    private var locationLayer: LocationLayer? = null
     private var mIndoorLayer: OSMIndoorLayer? = null
-
-    private var mCache: TileCache? = null
     ////////////////////////////////////////
 
     private var mapEventsReceiver: MapEventsReceiver? = null
 
-    var pos: MapPosition = MapPosition()
+    var thisPosition: MapPosition = MapPosition()
 
     var lastTap: Array<Float>? = null
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        //setSupportActionBar(toolbar)
 
-
+        //Floating button
         fab.setOnClickListener { view ->
-            Snackbar.make(view, pos!!.longitude.toString() + " " + pos!!.latitude.toString(), Snackbar.LENGTH_SHORT)
+            Snackbar.make(view, thisPosition.longitude.toString() + " " +
+                                    thisPosition.latitude.toString(),
+                                    Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show()
         }
-
-
-        /*Навигация слева
-        val toggle = ActionBarDrawerToggle(
-                this, drawer_layout, toolbar, R.string.navigation_drawer_open,
-                R.string.navigation_drawer_close)
-        drawer_layout.addDrawerListener(toggle)
-        toggle.syncState()
-
-        nav_view.setNavigationItemSelectedListener(this)*/
 
         //Код для MapView
         ////////////////////////////////////////
@@ -107,26 +81,23 @@ class MainActivity : AppCompatActivity(),
         mPref = MapPreferences(packageName, this)
         mTileSource = MapFileTileSource()
 
-        mapEventsReceiver = MapEventsReceiver(mMap!!)
-        mMap!!.layers().add(mapEventsReceiver) //обработка кликов на карту
+
+        mapEventsReceiver = MapEventsReceiver(mMap!!) //обработка кликов на карту
+        mMap!!.layers().add(mapEventsReceiver)        //
 
         var inputStreamBaseMap: InputStream? = null
         var outputStreamBaseMap: OutputStream? = null
         try {
             inputStreamBaseMap = assets.open("kubsau0.map")
-            var outFile = File(getExternalFilesDir(null), "kubsau0.map")
+            val outFile = File(getExternalFilesDir(null), "kubsau0.map")
             outputStreamBaseMap = FileOutputStream(outFile)
             copyFile(inputStreamBaseMap, outputStreamBaseMap)
             mTileSource!!.setMapFile(outFile.absolutePath)
             mBaseLayer = mMap!!.setBaseMap(mTileSource)
-            var minX: Double = 45.0397
-            var minY: Double = 38.9118
-            var maxX: Double = 45.0587
-            var maxY: Double = 38.9342
-            mMapView!!.map().viewport().maxZoomLevel = 20
 
-            //выше переменные boundingBox карты, эти цифры подобраны вручную и я не знаю что это за значения Х)
+            //эти цифры подобраны вручную и я не знаю, откуда эти цифры можно получить Х)
             mMapView!!.map().viewport().setMapLimit(0.60809, 0.35950, 0.60815, 0.35957)
+            mMapView!!.map().viewport().maxZoomLevel = 20
             mMapView!!.map().viewport().minZoomLevel = 14
         }
         catch (e: IOException) {
@@ -138,7 +109,6 @@ class MainActivity : AppCompatActivity(),
         }
 
         mMap!!.addTask({
-            //showToast("load data")
             var inputStream: InputStream? = null
             try {
                 inputStream = assets.open("kubsau2.geojson")
@@ -154,70 +124,31 @@ class MainActivity : AppCompatActivity(),
 
         mMap!!.setTheme(VtmThemes.DEFAULT)
         mMap!!.layers().add(LabelLayer(mMap, mBaseLayer))
-
-
-
-        //this.locationLayer = LocationLayer(mMap)
-        //locationLayer!!.locationRenderer.setShader("location_1_reverse")
-        //mMap!!.layers().add(locationLayer)
         ////////////////////////////////////////
+
+        val jsonObject = JSONObject(loadJsonFromAsset("kubsau_data.json"))
+                .getJSONObject("Кубанский Государственный Аграрный Университет")
+
+
+        searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                if (newText == null) return false
+                searchInJsonObjectKubSAU(jsonObject, newText)
+                return true
+            }
+
+        })
+
     }
-/*
-    override fun onBackPressed() {
-        if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
-            drawer_layout.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.main, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        when (item.itemId) {
-            R.id.action_settings -> return true
-            else -> return super.onOptionsItemSelected(item)
-        }
-    }*/
-/*
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        // Handle navigation view item clicks here.
-        when (item.itemId) {
-            R.id.nav_camera -> {
-                // Handle the camera action
-            }
-            R.id.nav_gallery -> {
-
-            }
-            R.id.nav_slideshow -> {
-
-            }
-            R.id.nav_manage -> {
-
-            }
-            R.id.nav_share -> {
-
-            }
-            R.id.nav_send -> {
-
-            }
-        }
-
-        drawer_layout.closeDrawer(GravityCompat.START)
-        return true
-    }*/
 
     @Throws (IOException::class)
     private fun copyFile(inputStream:InputStream, outputStream:OutputStream) {
-        var buffer = ByteArray(1024)
-        var read = 0
+        val buffer = ByteArray(1024)
+        var read: Int
         read = inputStream.read(buffer)
         while (read != -1) {
             outputStream.write(buffer, 0, read)
@@ -225,12 +156,93 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
+    private fun searchInJsonObjectKubSAU(kubSAUJson: JSONObject, searchString: String) {
+
+        if (searchString == "" &&
+                searchString == " ") return
+
+        val results = ArrayList<String>()
+
+        //поиск в ректорате//
+        var jsonArray = kubSAUJson["Ректорат"] as JSONArray
+        for (i in 0 until jsonArray.length()) {
+            var value = (jsonArray[i] as JSONObject).getString("Имя")
+            if (value.toLowerCase().indexOf(searchString.toLowerCase()) != -1) results.add(value)
+
+            value = (jsonArray[i] as JSONObject).getString("Должность")
+            if (value.toLowerCase().indexOf(searchString.toLowerCase()) != -1) results.add(value)
+        }
+
+        //поиск в корпусах//
+        jsonArray = kubSAUJson["Корпусы"] as JSONArray
+        for (i in 0 until jsonArray.length()) {
+            //чтобы когда написано эк выводился экономические факультет
+            val korpusName = (jsonArray[i] as JSONObject).getString("Название")
+            val korpusShort = (jsonArray[i] as JSONObject).getString("Сокращение")
+
+            if (korpusName.toLowerCase().indexOf(searchString.toLowerCase()) != -1 ||
+                    korpusShort.toLowerCase().indexOf(searchString.toLowerCase()) != -1)
+                results.add(korpusName)
+
+            //поиск по аудиториям//
+            val rooms = (jsonArray[i] as JSONObject)["Аудитории"] as JSONArray
+            for (j in 0 until rooms.length()) {
+                val roomName = (rooms[j] as JSONObject).getString("Название")
+
+                if (roomName.toLowerCase().indexOf(searchString.toLowerCase()) != -1)
+                    results.add(roomName + korpusShort)
+            }
+        }
+
+        //поиск в факультетах//
+        jsonArray = kubSAUJson["Факультеты"] as JSONArray
+        for (i in 0 until jsonArray.length()) {
+            val fakName = (jsonArray[i] as JSONObject).getString("Название")
+            val fakShort = (jsonArray[i] as JSONObject).getString("Сокращение")
+
+            if (fakName.toLowerCase().indexOf(searchString.toLowerCase()) != -1 ||
+                    fakShort.toLowerCase().indexOf(searchString.toLowerCase()) != -1)
+                results.add(fakName)
+
+            //поиск в кафедрах//
+            val kafedri = (jsonArray[i] as JSONObject)["Кафедры"] as JSONArray
+            for (j in 0 until kafedri.length()) {
+                val kafName = (kafedri[j] as JSONObject).getString("Название")
+                val kafShort = (kafedri[j] as JSONObject).getString("Сокращение")
+
+                if (kafName.toLowerCase().indexOf(searchString.toLowerCase()) != -1 ||
+                        kafShort.toLowerCase().indexOf(searchString.toLowerCase()) != -1)
+                    results.add(kafName)
+
+                //поиск в сотрудниках кафедры//
+                val sotrudniki = (kafedri[j] as JSONObject)["Сотрудники кафедры"] as JSONArray
+                for (k in 0 until sotrudniki.length()) {
+                    val sotrName = (sotrudniki[k] as JSONObject).getString("Имя")
+                    if (sotrName.toLowerCase().indexOf(searchString.toLowerCase()) != -1)
+                        results.add(sotrName)
+                }
+            }
+
+        }
+
+        searchResult.adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, results)
+    }
+
+    @Throws (IOException::class)
+    private fun loadJsonFromAsset( filePath: String): String {
+        val inputStream: InputStream = assets.open(filePath)
+        val buffer = ByteArray(inputStream.available())
+        inputStream.read(buffer)
+        inputStream.close()
+        return String(buffer, charset("UTF-8"))
+    }
+
     private fun loadJson(inputStream: InputStream) {
         //showToast("got data")
-        var data: VectorDataset = JeoTest.readGeoJson(inputStream)
-        var style: Style = JeoTest.getStyle()
-        var scale: Float = resources.displayMetrics.density
-        var textStyle: TextStyle = TextStyle.builder()
+        val data: VectorDataset = JeoTest.readGeoJson(inputStream)
+        val style: Style = JeoTest.getStyle()
+        val scale: Float = resources.displayMetrics.density
+        val textStyle: TextStyle = TextStyle.builder()
                 .isCaption(true)
                 .priority(0)
                 .fontSize(16 * scale).color(Color.BLACK)
@@ -245,7 +257,7 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun showToast(text: String) {
-        var ctx: Context = this
+        val ctx: Context = this
         runOnUiThread({
             Toast.makeText(ctx, text, Toast.LENGTH_SHORT).show()
         })
@@ -253,25 +265,17 @@ class MainActivity : AppCompatActivity(),
 
     fun onClick (v: View) {
         if (mIndoorLayer == null) return
-        var i = 0
+        val i: Int = (v as Button).text.toString().toInt() + 1
 
-
-        //if ((v as Button).background(Color.parseColor("#BDBDBD")))
-        if (((v as Button).background as ColorDrawable).color == Color.parseColor("#BDBDBD"))
+        if ((v.background as ColorDrawable).color == Color.parseColor("#BDBDBD"))
             v.setBackgroundColor(Color.WHITE)
         else
             v.setBackgroundColor(Color.parseColor("#BDBDBD"))
-        i = (v).text.toString().toInt() + 1
-        mIndoorLayer!!.activeLevels[i] = mIndoorLayer!!.activeLevels[i] xor true
 
+        mIndoorLayer!!.activeLevels[i] = mIndoorLayer!!.activeLevels[i] xor true
 
         log.debug(Arrays.toString(mIndoorLayer!!.activeLevels))
         mIndoorLayer!!.update()
-
-    }
-
-    fun updateLoc(v: View) {
-
     }
 
     override fun onResume() {
@@ -290,39 +294,38 @@ class MainActivity : AppCompatActivity(),
     override fun onDestroy() {
         mMapView!!.onDestroy()
         super.onDestroy()
-        if (mCache != null) mCache!!.dispose()
     }
 
-
     override fun onItemLongPress(index: Int, item: MarkerItem?): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return false
     }
 
     override fun onItemSingleTapUp(index: Int, item: MarkerItem?): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return false
+    }
+
+    override fun onQueryTextSubmit(query: String?): Boolean {
+        return false
+    }
+
+    override fun onQueryTextChange(newText: String?): Boolean {
+        return false
     }
 
     inner class MapEventsReceiver(map: Map): org.oscim.layers.Layer(map) , GestureListener {
 
-
         override fun onGesture(g: Gesture?, e: MotionEvent?): Boolean {
             if (g is Gesture.Tap) {
-                var p: GeoPoint = mMap.viewport().fromScreenPoint(e!!.x, e.y)
-                lastTap = arrayOf(e.x, e.y)
-
-                mMapView!!.map().getMapPosition(pos!!)
+                lastTap = arrayOf(e!!.x, e.y)
+                mMapView!!.map().getMapPosition(thisPosition)
             }
             if (g is Gesture.LongPress) {
-                var p: GeoPoint = mMap.viewport().fromScreenPoint(e!!.x, e.y)
-                lastTap = arrayOf(e.x, e.y)
+                lastTap = arrayOf(e!!.x, e.y)
             }
             if (g is Gesture.TripleTap) {
-                var p: GeoPoint = mMap.viewport().fromScreenPoint(e!!.x, e.y)
-                lastTap = arrayOf(e.x, e.y)
+                lastTap = arrayOf(e!!.x, e.y)
             }
             return false
         }
-
     }
-
 }

@@ -14,8 +14,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="bottom"
-        app:umanoPanelHeight="20dp"
         app:umanoShadowHeight="5dp"
+        app:umanoPanelHeight="50dp"
         app:umanoFadeColor="@android:color/transparent">
 
         <android.support.design.widget.CoordinatorLayout
@@ -89,13 +89,22 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="200dp">
+            android:layout_height="match_parent"
+            android:background="@android:color/white">
 
             <SearchView
-                android:layout_width="wrap_content"
+                android:id="@+id/searchView"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content">
-
+                <requestFocus/>
             </SearchView>
+            
+            <ListView
+                android:id="@+id/searchResult"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_below="@id/searchView"
+                tools:ignore="InvalidId"/>
 
         </RelativeLayout>
 
