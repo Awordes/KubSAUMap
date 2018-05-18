@@ -40,6 +40,54 @@
                     android:orientation="vertical">
 
                     <Button
+                        android:id="@+id/buttonFloor7"
+                        style="@android:style/Widget.DeviceDefault.Light.Button.Borderless.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/buttonFloorMargin"
+                        android:background="@android:color/background_light"
+                        android:onClick="onClick"
+                        android:text="@string/buttonFloor7"
+                        android:textColor="@android:color/black"
+                        android:visibility="gone"/>
+
+                    <Button
+                        android:id="@+id/buttonFloor6"
+                        style="@android:style/Widget.DeviceDefault.Light.Button.Borderless.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/buttonFloorMargin"
+                        android:background="@android:color/background_light"
+                        android:onClick="onClick"
+                        android:text="@string/buttonFloor6"
+                        android:textColor="@android:color/black"
+                        android:visibility="gone" />
+
+                    <Button
+                        android:id="@+id/buttonFloor5"
+                        style="@android:style/Widget.DeviceDefault.Light.Button.Borderless.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/buttonFloorMargin"
+                        android:background="@android:color/background_light"
+                        android:onClick="onClick"
+                        android:text="@string/buttonFloor5"
+                        android:textColor="@android:color/black"
+                        android:visibility="gone" />
+
+                    <Button
+                        android:id="@+id/buttonFloor4"
+                        style="@android:style/Widget.DeviceDefault.Light.Button.Borderless.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/buttonFloorMargin"
+                        android:background="@android:color/background_light"
+                        android:onClick="onClick"
+                        android:text="@string/buttonFloor4"
+                        android:textColor="@android:color/black"
+                        android:visibility="gone" />
+
+                    <Button
                         android:id="@+id/buttonFloor3"
                         style="@android:style/Widget.DeviceDefault.Light.Button.Borderless.Small"
                         android:layout_width="wrap_content"
@@ -48,7 +96,8 @@
                         android:background="@android:color/background_light"
                         android:onClick="onClick"
                         android:text="@string/buttonFloor3"
-                        android:textColor="@android:color/black" />
+                        android:textColor="@android:color/black"
+                        android:visibility="visible" />
 
                     <Button
                         android:id="@+id/buttonFloor2"
@@ -59,7 +108,8 @@
                         android:background="@android:color/background_light"
                         android:onClick="onClick"
                         android:text="@string/buttonFloor2"
-                        android:textColor="@android:color/black" />
+                        android:textColor="@android:color/black"
+                        android:visibility="visible" />
 
                     <Button
                         android:id="@+id/buttonFloor1"
@@ -70,7 +120,32 @@
                         android:background="@android:color/background_light"
                         android:onClick="onClick"
                         android:text="@string/buttonFloor1"
-                        android:textColor="@android:color/black" />
+                        android:textColor="@android:color/black"
+                        android:visibility="visible" />
+
+                    <Button
+                        android:id="@+id/buttonFloor0"
+                        style="@android:style/Widget.DeviceDefault.Light.Button.Borderless.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/buttonFloorMargin"
+                        android:background="@android:color/background_light"
+                        android:onClick="onClick"
+                        android:text="@string/buttonFloor0"
+                        android:textColor="@android:color/black"
+                        android:visibility="gone" />
+
+                    <Button
+                        android:id="@+id/buttonFloor_1"
+                        style="@android:style/Widget.DeviceDefault.Light.Button.Borderless.Small"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/buttonFloorMargin"
+                        android:background="@android:color/background_light"
+                        android:onClick="onClick"
+                        android:text="@string/buttonFloor_1"
+                        android:textColor="@android:color/black"
+                        android:visibility="gone" />
 
                 </LinearLayout>
 

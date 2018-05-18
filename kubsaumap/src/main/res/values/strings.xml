@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">KubSAUMap</string>
     <string name="action_settings">Settings</string>
+    <string name="buttonFloor_1">-1</string>
+    <string name="buttonFloor0">0</string>
     <string name="buttonFloor1">1</string>
     <string name="buttonFloor2">2</string>
     <string name="buttonFloor3">3</string>

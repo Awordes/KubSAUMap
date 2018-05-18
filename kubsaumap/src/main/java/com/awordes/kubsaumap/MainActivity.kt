@@ -62,9 +62,16 @@ class MainActivity : AppCompatActivity(),
 
     var lastTap: Array<Float>? = null
 
+    private var buttons: Array<Button>? = null
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        buttons = arrayOf(buttonFloor0, buttonFloor1, buttonFloor2, buttonFloor3,
+                buttonFloor4, buttonFloor5, buttonFloor6, buttonFloor7)
+        //buttons!![-1] = buttonFloor_1
 
         //Floating button
         fab.setOnClickListener { view ->
@@ -111,7 +118,7 @@ class MainActivity : AppCompatActivity(),
         mMap!!.addTask({
             var inputStream: InputStream? = null
             try {
-                inputStream = assets.open("kubsau2.geojson")
+                inputStream = assets.open("kubsau1.geojson")
                 loadJson(inputStream)
             }
             catch (e: IOException) {
@@ -224,7 +231,6 @@ class MainActivity : AppCompatActivity(),
             }
 
         }
-
         searchResult.adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, results)
     }
 
@@ -250,9 +256,11 @@ class MainActivity : AppCompatActivity(),
                 .build()
         mIndoorLayer = OSMIndoorLayer(mMap, data, style, textStyle)
         mMap!!.layers().add(mIndoorLayer)
-        showToast("data ready")
+        //showToast("data ready")
         mMap!!.updateMap(true)
-        mIndoorLayer!!.activeLevels[0] = true
+        for (j in 0 until mIndoorLayer!!.activeLevels.size) {
+            mIndoorLayer!!.activeLevels[j] = true
+        }
         mIndoorLayer!!.update()
     }
 
@@ -264,17 +272,68 @@ class MainActivity : AppCompatActivity(),
     }
 
     fun onClick (v: View) {
-        if (mIndoorLayer == null) return
-        val i: Int = (v as Button).text.toString().toInt() + 1
+        val i: Int = (v as Button).text.toString().toInt()
 
-        if ((v.background as ColorDrawable).color == Color.parseColor("#BDBDBD"))
-            v.setBackgroundColor(Color.WHITE)
-        else
-            v.setBackgroundColor(Color.parseColor("#BDBDBD"))
+        for (button in buttons!!) {
+            button.visibility = View.GONE
+            button.setBackgroundColor(Color.WHITE)
+        }
+        buttonFloor_1.visibility = View.GONE
+        buttonFloor_1.setBackgroundColor(Color.WHITE)
 
-        mIndoorLayer!!.activeLevels[i] = mIndoorLayer!!.activeLevels[i] xor true
+        when (i) {
+            7 -> {
+                buttons!![i].visibility = View.VISIBLE
+                buttons!![i - 2].visibility = View.VISIBLE
+                buttons!![i - 3].visibility = View.VISIBLE
+            }
+            0 -> {
+                buttons!![i + 1].visibility = View.VISIBLE
+                buttons!![i].visibility = View.VISIBLE
+                buttonFloor_1.visibility = View.VISIBLE
+            }
+            -1 -> {
+                buttonFloor0.visibility = View.VISIBLE
+                buttonFloor1.visibility = View.VISIBLE
+                buttonFloor_1.visibility = View.VISIBLE
+            }
+            else -> {
+                buttons!![i + 1].visibility = View.VISIBLE
+                buttons!![i].visibility = View.VISIBLE
+                buttons!![i - 1].visibility = View.VISIBLE
+            }
+        }
 
-        log.debug(Arrays.toString(mIndoorLayer!!.activeLevels))
+        if (i in 0..7)
+        buttons!![i].setBackgroundColor(Color.parseColor("#BDBDBD"))
+        else if (i == -1) buttonFloor_1.setBackgroundColor(Color.parseColor("#BDBDBD"))
+
+        mMap!!.layers().remove(mIndoorLayer)
+
+        if (i <= 0 || i > 2) {
+
+            mMap!!.updateMap(true)
+            return
+        }
+
+        mMap!!.addTask({
+            var inputStream: InputStream? = null
+            try {
+                inputStream = assets.open("kubsau"+ i.toString() + ".geojson")
+                loadJson(inputStream)
+            }
+            catch (e: IOException) {
+                e.printStackTrace()
+            }
+            finally {
+                IOUtils.closeQuietly(inputStream)
+            }
+        })
+
+        for (j in 0 until mIndoorLayer!!.activeLevels.size) {
+            mIndoorLayer!!.activeLevels[j] = true
+        }
+
         mIndoorLayer!!.update()
     }
 
