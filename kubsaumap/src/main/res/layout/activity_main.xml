@@ -16,6 +16,7 @@
         android:gravity="bottom"
         app:umanoShadowHeight="5dp"
         app:umanoPanelHeight="50dp"
+        app:umanoParallaxOffset="183dp"
         app:umanoFadeColor="@android:color/transparent">
 
         <android.support.design.widget.CoordinatorLayout
@@ -36,7 +37,7 @@
                     android:layout_height="match_parent"
                     android:layout_alignParentTop="true"
                     android:alpha="0.7"
-                    android:gravity="center|end"
+                    android:gravity="top|bottom|end"
                     android:orientation="vertical">
 
                     <Button
@@ -49,7 +50,7 @@
                         android:onClick="onClick"
                         android:text="@string/buttonFloor7"
                         android:textColor="@android:color/black"
-                        android:visibility="gone"/>
+                        android:visibility="gone" />
 
                     <Button
                         android:id="@+id/buttonFloor6"
@@ -163,6 +164,7 @@
         </android.support.design.widget.CoordinatorLayout>
 
         <RelativeLayout
+            android:id = "@+id/slidePanel"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/white">
@@ -180,6 +182,24 @@
                 android:layout_height="fill_parent"
                 android:layout_below="@id/searchView"
                 tools:ignore="InvalidId"/>
+
+            <RelativeLayout
+                android:id="@+id/infoPanel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/recView"
+                    android:scrollbars="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+            </RelativeLayout>
 
         </RelativeLayout>
 

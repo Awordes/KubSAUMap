@@ -16,7 +16,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92459350000,
                         45.04459290000
@@ -56,7 +56,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92510850000,
                         45.04949870000
@@ -92,7 +92,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92747430000,
                         45.04432850000
@@ -131,7 +131,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92565030000,
                         45.04163350000
@@ -171,7 +171,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92637090000,
                         45.04192390000
@@ -236,7 +236,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92253320000,
                         45.04944960000
@@ -272,7 +272,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92431590000,
                         45.04453680000
@@ -312,7 +312,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92411240000,
                         45.04816880000
@@ -352,7 +352,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92622820000,
                         45.04951610000
@@ -389,7 +389,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92431090000,
                         45.04459260000
@@ -449,7 +449,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92410560000,
                         45.04484430000
@@ -485,7 +485,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92528620000,
                         45.04397840000
@@ -539,7 +539,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92223190000,
                         45.04255730000
@@ -577,7 +577,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.91847330000,
                         45.04854760000
@@ -641,7 +641,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92388260000,
                         45.04981500000
@@ -676,7 +676,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92616870000,
                         45.04779660000
@@ -729,7 +729,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92569890000,
                         45.04314390000
@@ -768,7 +768,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92165580000,
                         45.05017330000
@@ -807,7 +807,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92324080000,
                         45.04606480000
@@ -851,7 +851,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92595780000,
                         45.04634550000
@@ -906,7 +906,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92304500000,
                         45.04436950000
@@ -969,7 +969,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92512860000,
                         45.04320670000
@@ -1025,7 +1025,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92371930000,
                         45.05043260000
@@ -1059,7 +1059,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92601000000,
                         45.04812930000
@@ -1098,7 +1098,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92489250000,
                         45.04423470000
@@ -1161,7 +1161,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92185890000,
                         45.05091320000
@@ -1200,7 +1200,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92522500000,
                         45.04743480000
@@ -1251,7 +1251,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.91773750000,
                         45.04880290000
@@ -1291,7 +1291,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92392270000,
                         45.04911540000
@@ -1328,7 +1328,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92566000000,
                         45.04387900000
@@ -1361,7 +1361,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92606180000,
                         45.04962470000
@@ -1417,7 +1417,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92714260000,
                         45.04812230000
@@ -1457,7 +1457,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92324310000,
                         45.05022210000
@@ -1495,7 +1495,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92436790000,
                         45.04798200000
@@ -1551,7 +1551,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92667950000,
                         45.04844250000
@@ -1591,7 +1591,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92949250000,
                         45.04626320000
@@ -1719,7 +1719,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92332810000,
                         45.04864840000
@@ -1754,7 +1754,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92388600000,
                         45.04672650000
@@ -1792,7 +1792,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92098530000,
                         45.05061280000
@@ -1828,7 +1828,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92552550000,
                         45.04301330000
@@ -1867,7 +1867,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92102720000,
                         45.04967670000
@@ -1905,7 +1905,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92398220000,
                         45.05024710000
@@ -1944,7 +1944,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92738570000,
                         45.04463130000
@@ -1984,7 +1984,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92198390000,
                         45.04901570000
@@ -2021,7 +2021,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92415830000,
                         45.04463930000
@@ -2061,7 +2061,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92330380000,
                         45.04709900000
@@ -2102,7 +2102,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.91943540000,
                         45.04851150000
@@ -2142,7 +2142,7 @@
             },
             "geometry": {
                 "type": "LineString",
-                "coordinates": [
+                "coord": [
                     [
                         38.92617140000,
                         45.04883450000

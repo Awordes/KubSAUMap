@@ -1,27 +1,26 @@
 package com.awordes.kubsaumap
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import android.view.View
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.SearchView
-import android.widget.Toast
+import android.view.inputmethod.InputMethodManager
+import android.widget.*
 import org.jeo.map.Style
 import org.jeo.vector.VectorDataset
 import org.json.JSONArray
 import org.json.JSONObject
-import org.oscim.android.MapPreferences
-import org.oscim.android.MapView
+import org.oscim.android.canvas.AndroidBitmap
+import org.oscim.core.GeoPoint
 import org.oscim.map.Map
 import org.oscim.layers.tile.vector.VectorTileLayer
 import org.oscim.tiling.source.mapfile.MapFileTileSource
-import org.slf4j.LoggerFactory
 import org.oscim.core.MapPosition
 import org.oscim.event.Gesture
 import org.oscim.event.GestureListener
@@ -29,49 +28,53 @@ import org.oscim.event.MotionEvent
 import org.oscim.layers.OSMIndoorLayer
 import org.oscim.layers.marker.ItemizedLayer
 import org.oscim.layers.marker.MarkerItem
+import org.oscim.layers.marker.MarkerSymbol
 import org.oscim.layers.tile.vector.labeling.LabelLayer
 import org.oscim.test.JeoTest
 import org.oscim.theme.VtmThemes
 import org.oscim.utils.IOUtils
 import org.oscim.theme.styles.TextStyle
 import java.io.*
-import java.util.*
 import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity(),
-        ItemizedLayer.OnItemGestureListener<MarkerItem>,
-        SearchView.OnQueryTextListener {
+        ItemizedLayer.OnItemGestureListener<MarkerItem> {
 
     ////////////////////////////////////////
-    private var mMapView: MapView? = null
     private var mMap: Map? = null
-    private var mPref: MapPreferences? = null
-    ////////////////////////////////////////
 
-
-    ////////////////////////////////////////
-    private val log = LoggerFactory.getLogger(MainActivity::class.java)
     private var mBaseLayer: VectorTileLayer? = null
     private var mTileSource: MapFileTileSource? = null
     private var mIndoorLayer: OSMIndoorLayer? = null
+    private var mMarkerLayer: ItemizedLayer<MarkerItem>? = null
     ////////////////////////////////////////
 
     private var mapEventsReceiver: MapEventsReceiver? = null
 
     var thisPosition: MapPosition = MapPosition()
 
-    var lastTap: Array<Float>? = null
+    var lastTap: Array<Double> = Array(2, {0.0})
 
-    private var buttons: Array<Button>? = null
+    private var buttons: Array<Button?> = arrayOf(null)
 
+    private var kubsauData: JSONObject? = null
+
+    private var floor: Int = -1
+
+    private var isIndoorLayerExist = false
+
+    private var matchParentValue = 0
+
+    //private var typeface = Typeface.createFromAsset(assets, "fonts/blisspro-regular.otf")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        matchParentValue = slidePanel.layoutParams.height
+
         buttons = arrayOf(buttonFloor0, buttonFloor1, buttonFloor2, buttonFloor3,
                 buttonFloor4, buttonFloor5, buttonFloor6, buttonFloor7)
-        //buttons!![-1] = buttonFloor_1
 
         //Floating button
         fab.setOnClickListener { view ->
@@ -83,11 +86,8 @@ class MainActivity : AppCompatActivity(),
 
         //Код для MapView
         ////////////////////////////////////////
-        mMapView = mapView
-        mMap = mMapView!!.map()
-        mPref = MapPreferences(packageName, this)
+        mMap = mapView.map()
         mTileSource = MapFileTileSource()
-
 
         mapEventsReceiver = MapEventsReceiver(mMap!!) //обработка кликов на карту
         mMap!!.layers().add(mapEventsReceiver)        //
@@ -103,9 +103,9 @@ class MainActivity : AppCompatActivity(),
             mBaseLayer = mMap!!.setBaseMap(mTileSource)
 
             //эти цифры подобраны вручную и я не знаю, откуда эти цифры можно получить Х)
-            mMapView!!.map().viewport().setMapLimit(0.60809, 0.35950, 0.60815, 0.35957)
-            mMapView!!.map().viewport().maxZoomLevel = 20
-            mMapView!!.map().viewport().minZoomLevel = 14
+            mapView.map().viewport().setMapLimit(0.60809, 0.35950, 0.60815, 0.35957)
+            mapView.map().viewport().maxZoomLevel = 20
+            mapView.map().viewport().minZoomLevel = 14
         }
         catch (e: IOException) {
             e.printStackTrace()
@@ -115,27 +115,16 @@ class MainActivity : AppCompatActivity(),
             IOUtils.closeQuietly(outputStreamBaseMap)
         }
 
-        mMap!!.addTask({
-            var inputStream: InputStream? = null
-            try {
-                inputStream = assets.open("kubsau1.geojson")
-                loadJson(inputStream)
-            }
-            catch (e: IOException) {
-                e.printStackTrace()
-            }
-            finally {
-                IOUtils.closeQuietly(inputStream)
-            }
-        })
-
         mMap!!.setTheme(VtmThemes.DEFAULT)
         mMap!!.layers().add(LabelLayer(mMap, mBaseLayer))
         ////////////////////////////////////////
 
-        val jsonObject = JSONObject(loadJsonFromAsset("kubsau_data.json"))
+        kubsauData = JSONObject(loadJsonFromAsset("kubsau_data.json"))
                 .getJSONObject("Кубанский Государственный Аграрный Университет")
 
+        searchView.setOnSearchClickListener {
+            slidePanel.layoutParams.height = matchParentValue
+        }
 
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -143,13 +132,59 @@ class MainActivity : AppCompatActivity(),
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
+                slidePanel.layoutParams.height = matchParentValue
                 if (newText == null) return false
-                searchInJsonObjectKubSAU(jsonObject, newText)
+                viewSearchResult(searchInJsonObjectKubSAU(kubsauData!!, newText))
                 return true
             }
-
         })
 
+        searchResult.onItemClickListener = AdapterView.OnItemClickListener { _, view, _, _ ->
+            val text: String = (view as TextView).text.toString()
+            showMessage(text)
+            slidePanel.layoutParams.height = 700
+            (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+                    .hideSoftInputFromWindow(searchView.windowToken, 0)
+            searchResult.visibility = View.GONE
+            infoPanel.visibility = View.VISIBLE
+            name.text = text
+            //searchInJsonObjectKubSAU(kubsauData!!, text)
+        }
+
+        mMap!!.events.bind(Map.UpdateListener { _, mapPosition ->
+            if (floor == -1 ) return@UpdateListener
+            val zoomLimit = 16
+
+            if (mapPosition.zoomLevel > zoomLimit && !isIndoorLayerExist) {
+                isIndoorLayerExist = true
+                addIndoorLayer()
+                return@UpdateListener
+            }
+            if (mapPosition.zoomLevel <= zoomLimit && isIndoorLayerExist) {
+                mMap!!.layers().remove(mIndoorLayer)
+                mMap!!.updateMap(false)
+                isIndoorLayerExist = false
+            }
+        })
+
+//        var llm: LinearLayoutManager = LinearLayoutManager(this)
+//        recView.layoutManager = llm
+    }
+
+    fun addMarker() {
+        mMap!!.layers().remove(mMarkerLayer)
+        var bitmapPoi: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.marker)
+        bitmapPoi = Bitmap.createScaledBitmap(bitmapPoi, 60, 60, true)
+        val symbol = MarkerSymbol(AndroidBitmap(bitmapPoi),
+                MarkerSymbol.HotspotPlace.BOTTOM_CENTER)
+        mMarkerLayer = ItemizedLayer<MarkerItem>(mMap, ArrayList<MarkerItem>(), symbol, this)
+        mMap!!.layers().add(mMarkerLayer)
+        val long = lastTap[1]
+        val lat = lastTap[0]
+        val pts: List<MarkerItem> = listOf(MarkerItem(lat.toString() + "/" + long.toString(), "",
+                GeoPoint(lat, long)))
+        mMarkerLayer!!.addItems(pts)
+        mMap!!.updateMap(true)
     }
 
     @Throws (IOException::class)
@@ -163,10 +198,13 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
-    private fun searchInJsonObjectKubSAU(kubSAUJson: JSONObject, searchString: String) {
+    private fun viewSearchResult(results: ArrayList<String>?) {
+        if (results == null) return
+        searchResult.adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, results)
+    }
 
-        if (searchString == "" &&
-                searchString == " ") return
+    private fun searchInJsonObjectKubSAU(kubSAUJson: JSONObject, searchString: String) : ArrayList<String>? {
+        if (searchString == "" && searchString == " ") return null
 
         val results = ArrayList<String>()
 
@@ -229,9 +267,59 @@ class MainActivity : AppCompatActivity(),
                         results.add(sotrName)
                 }
             }
-
         }
-        searchResult.adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, results)
+        return results
+    }
+
+    private fun tapInRoom () : String {
+        var result = ""
+
+        val corpuses = kubsauData!!["Корпусы"] as JSONArray
+        for (i in 0 until corpuses.length()) {
+            val rooms = (corpuses[i] as JSONObject)["Аудитории"] as JSONArray
+            val corpusShort = (corpuses[i] as JSONObject).getString("Сокращение")
+
+            for (j in 0 until rooms.length()) {
+                val roomName = (rooms[j] as JSONObject).getString("Название")
+
+                if (floor == 1 && roomName.length > 2) continue
+                else if (floor.toString() != roomName[0].toString()) continue
+
+                val coordinates: Array<Array<Double>> = arrayOf(Array(4, {0.0}), Array(4, {0.0}))
+                val jSONcoordinates = (rooms[j] as JSONObject)["Координаты"] as JSONArray
+
+                for (k in 0 until (jSONcoordinates).length()) {
+                    val pointX = (jSONcoordinates[k] as JSONObject).getString("x")
+                    val pointY = (jSONcoordinates[k] as JSONObject).getString("y")
+                    coordinates[0][k] = pointX.toDouble()
+                    coordinates[1][k] = pointY.toDouble()
+                }
+                if (isInRoom(coordinates)) {
+                    result = roomName + corpusShort
+                    showMessage(result)
+                }
+            }
+        }
+        return result
+    }
+
+    private fun isInRoom(p: Array<Array<Double>>) : Boolean {
+        var result = false
+        val size = p[0].size
+        var j = size - 1
+        for (i in 0 until size) {
+            if((((p[1][i] <= lastTap[1]) && (lastTap[1] < p[1][j])) || ((p[1][j] <= lastTap[1]) && (lastTap[1] < p[1][i]))) &&
+                    (lastTap[0] > (p[0][j] - p[0][i]) * (lastTap[1] - p[1][i]) / (p[1][j] - p[1][i]) + p[0][i])) {
+                result = !result
+            }
+            j = i
+        }
+        return  result
+    }
+
+    private fun showMessage(text: String) {
+        Snackbar.make(fab, text, Snackbar.LENGTH_SHORT)
+                .setAction("Action", null).show()
     }
 
     @Throws (IOException::class)
@@ -256,7 +344,6 @@ class MainActivity : AppCompatActivity(),
                 .build()
         mIndoorLayer = OSMIndoorLayer(mMap, data, style, textStyle)
         mMap!!.layers().add(mIndoorLayer)
-        //showToast("data ready")
         mMap!!.updateMap(true)
         for (j in 0 until mIndoorLayer!!.activeLevels.size) {
             mIndoorLayer!!.activeLevels[j] = true
@@ -264,32 +351,25 @@ class MainActivity : AppCompatActivity(),
         mIndoorLayer!!.update()
     }
 
-    private fun showToast(text: String) {
-        val ctx: Context = this
-        runOnUiThread({
-            Toast.makeText(ctx, text, Toast.LENGTH_SHORT).show()
-        })
-    }
+    private fun addIndoorLayer () {
+        val i: Int = floor
 
-    fun onClick (v: View) {
-        val i: Int = (v as Button).text.toString().toInt()
-
-        for (button in buttons!!) {
-            button.visibility = View.GONE
-            button.setBackgroundColor(Color.WHITE)
+        for (button in buttons) {
+            button?.visibility = View.GONE
+            button?.setBackgroundColor(Color.WHITE)
         }
         buttonFloor_1.visibility = View.GONE
         buttonFloor_1.setBackgroundColor(Color.WHITE)
 
         when (i) {
             7 -> {
-                buttons!![i].visibility = View.VISIBLE
-                buttons!![i - 2].visibility = View.VISIBLE
-                buttons!![i - 3].visibility = View.VISIBLE
+                buttons[i]?.visibility = View.VISIBLE
+                buttons[i - 2]?.visibility = View.VISIBLE
+                buttons[i - 3]?.visibility = View.VISIBLE
             }
             0 -> {
-                buttons!![i + 1].visibility = View.VISIBLE
-                buttons!![i].visibility = View.VISIBLE
+                buttons[i + 1]?.visibility = View.VISIBLE
+                buttons[i]?.visibility = View.VISIBLE
                 buttonFloor_1.visibility = View.VISIBLE
             }
             -1 -> {
@@ -298,20 +378,18 @@ class MainActivity : AppCompatActivity(),
                 buttonFloor_1.visibility = View.VISIBLE
             }
             else -> {
-                buttons!![i + 1].visibility = View.VISIBLE
-                buttons!![i].visibility = View.VISIBLE
-                buttons!![i - 1].visibility = View.VISIBLE
+                buttons[i + 1]?.visibility = View.VISIBLE
+                buttons[i]?.visibility = View.VISIBLE
+                buttons[i - 1]?.visibility = View.VISIBLE
             }
         }
 
         if (i in 0..7)
-        buttons!![i].setBackgroundColor(Color.parseColor("#BDBDBD"))
+            buttons[i]?.setBackgroundColor(Color.parseColor("#BDBDBD"))
         else if (i == -1) buttonFloor_1.setBackgroundColor(Color.parseColor("#BDBDBD"))
 
-        mMap!!.layers().remove(mIndoorLayer)
-
         if (i <= 0 || i > 2) {
-
+            mMap!!.layers().remove(mIndoorLayer)
             mMap!!.updateMap(true)
             return
         }
@@ -319,8 +397,14 @@ class MainActivity : AppCompatActivity(),
         mMap!!.addTask({
             var inputStream: InputStream? = null
             try {
+                mMap!!.layers().remove(mIndoorLayer)
                 inputStream = assets.open("kubsau"+ i.toString() + ".geojson")
                 loadJson(inputStream)
+                for (j in 0 until mIndoorLayer!!.activeLevels.size) {
+                    mIndoorLayer!!.activeLevels[j] = true
+                }
+                mIndoorLayer!!.update()
+                isIndoorLayerExist = true
             }
             catch (e: IOException) {
                 e.printStackTrace()
@@ -329,29 +413,26 @@ class MainActivity : AppCompatActivity(),
                 IOUtils.closeQuietly(inputStream)
             }
         })
+    }
 
-        for (j in 0 until mIndoorLayer!!.activeLevels.size) {
-            mIndoorLayer!!.activeLevels[j] = true
-        }
-
-        mIndoorLayer!!.update()
+    fun onClick (v: View) {
+        floor = (v as Button).text.toString().toInt()
+        addIndoorLayer()
     }
 
     override fun onResume() {
         super.onResume()
-        mPref!!.load(mMapView!!.map())
-        mMapView!!.onResume()
+        mapView.onResume()
         mMap!!.setMapPosition(45.04215, 38.9262, (1 shl 16).toDouble())
     }
 
     override fun onPause() {
-        mPref!!.save(mMapView!!.map())
-        mMapView!!.onPause()
+        mapView.onResume()
         super.onPause()
     }
 
     override fun onDestroy() {
-        mMapView!!.onDestroy()
+        mapView.onResume()
         super.onDestroy()
     }
 
@@ -363,26 +444,21 @@ class MainActivity : AppCompatActivity(),
         return false
     }
 
-    override fun onQueryTextSubmit(query: String?): Boolean {
-        return false
-    }
-
-    override fun onQueryTextChange(newText: String?): Boolean {
-        return false
-    }
-
     inner class MapEventsReceiver(map: Map): org.oscim.layers.Layer(map) , GestureListener {
 
         override fun onGesture(g: Gesture?, e: MotionEvent?): Boolean {
             if (g is Gesture.Tap) {
-                lastTap = arrayOf(e!!.x, e.y)
-                mMapView!!.map().getMapPosition(thisPosition)
+                val tupPos: GeoPoint = mMap.viewport().fromScreenPoint(e!!.x, e.y)
+                lastTap = arrayOf(tupPos.latitude, tupPos.longitude)
+                addMarker()
+                tapInRoom()
+                mapView.map().getMapPosition(thisPosition)
             }
             if (g is Gesture.LongPress) {
-                lastTap = arrayOf(e!!.x, e.y)
+                lastTap = arrayOf(e!!.x.toDouble(), e.y.toDouble())
             }
             if (g is Gesture.TripleTap) {
-                lastTap = arrayOf(e!!.x, e.y)
+                lastTap = arrayOf(e!!.x.toDouble(), e.y.toDouble())
             }
             return false
         }
