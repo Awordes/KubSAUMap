@@ -4,10 +4,12 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -47,23 +49,43 @@ class MainActivity : AppCompatActivity(),
     private var mTileSource: MapFileTileSource? = null
     private var mIndoorLayer: OSMIndoorLayer? = null
     private var mMarkerLayer: ItemizedLayer<MarkerItem>? = null
+    private var mLocationMarkerLayer: ItemizedLayer<MarkerItem>? = null
     ////////////////////////////////////////
 
     private var mapEventsReceiver: MapEventsReceiver? = null
 
     var thisPosition: MapPosition = MapPosition()
 
-    var lastTap: Array<Double> = Array(2, {0.0})
+    private var lastTap: Array<Double> = Array(2, {0.0})
+
+    private var myLocation: Array<Double> = Array(2, {0.0})
 
     private var buttons: Array<Button?> = arrayOf(null)
 
     private var kubsauData: JSONObject? = null
 
-    private var floor: Int = -1
+    private var floor: Int = 0
 
     private var isIndoorLayerExist = false
 
     private var matchParentValue = 0
+
+    private var locationManager: LocationManager? = null
+
+    private var locationListener: LocationListener = object : LocationListener {
+        override fun onLocationChanged(location: Location?) {
+            myLocation[0] = location!!.latitude
+            myLocation[1] = location.longitude
+            addLocation(myLocation)
+        }
+
+        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+
+        override fun onProviderEnabled(provider: String?) {}
+
+        override fun onProviderDisabled(provider: String?) {}
+
+    }
 
     //private var typeface = Typeface.createFromAsset(assets, "fonts/blisspro-regular.otf")
 
@@ -72,14 +94,14 @@ class MainActivity : AppCompatActivity(),
         setContentView(R.layout.activity_main)
 
         matchParentValue = slidePanel.layoutParams.height
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         buttons = arrayOf(buttonFloor0, buttonFloor1, buttonFloor2, buttonFloor3,
                 buttonFloor4, buttonFloor5, buttonFloor6, buttonFloor7)
 
         //Floating button
         fab.setOnClickListener { view ->
-            Snackbar.make(view, thisPosition.longitude.toString() + " " +
-                                    thisPosition.latitude.toString(),
+            Snackbar.make(view, "",
                                     Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show()
         }
@@ -119,6 +141,8 @@ class MainActivity : AppCompatActivity(),
         mMap!!.layers().add(LabelLayer(mMap, mBaseLayer))
         ////////////////////////////////////////
 
+
+
         kubsauData = JSONObject(loadJsonFromAsset("kubsau_data.json"))
                 .getJSONObject("Кубанский Государственный Аграрный Университет")
 
@@ -147,8 +171,6 @@ class MainActivity : AppCompatActivity(),
                     .hideSoftInputFromWindow(searchView.windowToken, 0)
             searchResult.visibility = View.GONE
             infoPanel.visibility = View.VISIBLE
-            name.text = text
-            //searchInJsonObjectKubSAU(kubsauData!!, text)
         }
 
         mMap!!.events.bind(Map.UpdateListener { _, mapPosition ->
@@ -156,22 +178,18 @@ class MainActivity : AppCompatActivity(),
             val zoomLimit = 16
 
             if (mapPosition.zoomLevel > zoomLimit && !isIndoorLayerExist) {
-                isIndoorLayerExist = true
                 addIndoorLayer()
+                isIndoorLayerExist = true
                 return@UpdateListener
             }
             if (mapPosition.zoomLevel <= zoomLimit && isIndoorLayerExist) {
-                mMap!!.layers().remove(mIndoorLayer)
-                mMap!!.updateMap(false)
+                removeIndoorLayer()
                 isIndoorLayerExist = false
             }
         })
-
-//        var llm: LinearLayoutManager = LinearLayoutManager(this)
-//        recView.layoutManager = llm
     }
 
-    fun addMarker() {
+    fun addMarker(coord: Array<Double>) {
         mMap!!.layers().remove(mMarkerLayer)
         var bitmapPoi: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.marker)
         bitmapPoi = Bitmap.createScaledBitmap(bitmapPoi, 60, 60, true)
@@ -179,12 +197,29 @@ class MainActivity : AppCompatActivity(),
                 MarkerSymbol.HotspotPlace.BOTTOM_CENTER)
         mMarkerLayer = ItemizedLayer<MarkerItem>(mMap, ArrayList<MarkerItem>(), symbol, this)
         mMap!!.layers().add(mMarkerLayer)
-        val long = lastTap[1]
-        val lat = lastTap[0]
+        val long = coord[1]
+        val lat = coord[0]
         val pts: List<MarkerItem> = listOf(MarkerItem(lat.toString() + "/" + long.toString(), "",
                 GeoPoint(lat, long)))
         mMarkerLayer!!.addItems(pts)
         mMap!!.updateMap(true)
+    }
+
+    fun addLocation (coord: Array<Double>) {
+        mMap!!.layers().remove(mLocationMarkerLayer)
+        var bitmapPoi: Bitmap = BitmapFactory.decodeResource(resources, R.drawable.location)
+        bitmapPoi = Bitmap.createScaledBitmap(bitmapPoi, 60, 60, true)
+        val symbol = MarkerSymbol(AndroidBitmap(bitmapPoi),
+                MarkerSymbol.HotspotPlace.BOTTOM_CENTER)
+        mLocationMarkerLayer = ItemizedLayer<MarkerItem>(mMap, ArrayList<MarkerItem>(), symbol, this)
+        mMap!!.layers().add(mLocationMarkerLayer)
+        val long = coord[1]
+        val lat = coord[0]
+        val pts: List<MarkerItem> = listOf(MarkerItem(lat.toString() + "/" + long.toString(), "",
+                GeoPoint(lat, long)))
+        mLocationMarkerLayer!!.addItems(pts)
+        mMap!!.updateMap(true)
+
     }
 
     @Throws (IOException::class)
@@ -343,12 +378,23 @@ class MainActivity : AppCompatActivity(),
                 .strokeWidth(2.2f * scale).strokeColor(Color.WHITE)
                 .build()
         mIndoorLayer = OSMIndoorLayer(mMap, data, style, textStyle)
+        mIndoorLayer!!.activeLevels[floor + 1] = true
         mMap!!.layers().add(mIndoorLayer)
         mMap!!.updateMap(true)
-        for (j in 0 until mIndoorLayer!!.activeLevels.size) {
-            mIndoorLayer!!.activeLevels[j] = true
+    }
+
+    private fun removeIndoorLayer () {
+        val removingFloors: ArrayList<OSMIndoorLayer> = ArrayList()
+        for (layer in mMap!!.layers()) {
+            if (layer is OSMIndoorLayer)
+                removingFloors.add(layer)
         }
-        mIndoorLayer!!.update()
+
+        for (floor in removingFloors) {
+            mMap!!.layers().remove(floor)
+        }
+        mMap!!.updateMap(true)
+        mIndoorLayer = null
     }
 
     private fun addIndoorLayer () {
@@ -389,21 +435,16 @@ class MainActivity : AppCompatActivity(),
         else if (i == -1) buttonFloor_1.setBackgroundColor(Color.parseColor("#BDBDBD"))
 
         if (i <= 0 || i > 2) {
-            mMap!!.layers().remove(mIndoorLayer)
-            mMap!!.updateMap(true)
+            removeIndoorLayer()
             return
         }
 
         mMap!!.addTask({
             var inputStream: InputStream? = null
             try {
-                mMap!!.layers().remove(mIndoorLayer)
+                removeIndoorLayer()
                 inputStream = assets.open("kubsau"+ i.toString() + ".geojson")
                 loadJson(inputStream)
-                for (j in 0 until mIndoorLayer!!.activeLevels.size) {
-                    mIndoorLayer!!.activeLevels[j] = true
-                }
-                mIndoorLayer!!.update()
                 isIndoorLayerExist = true
             }
             catch (e: IOException) {
@@ -418,22 +459,40 @@ class MainActivity : AppCompatActivity(),
     fun onClick (v: View) {
         floor = (v as Button).text.toString().toInt()
         addIndoorLayer()
+        isIndoorLayerExist = true
     }
 
     override fun onResume() {
         super.onResume()
         mapView.onResume()
         mMap!!.setMapPosition(45.04215, 38.9262, (1 shl 16).toDouble())
+
+        try {
+            locationManager?.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                                            1000 * 10,
+                                            10f,
+                                            locationListener)
+
+            locationManager?.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                                            1000 * 10,
+                                            10f,
+                                            locationListener)
+        }
+        catch (e: SecurityException) {
+            e.printStackTrace()
+        }
     }
 
     override fun onPause() {
-        mapView.onResume()
         super.onPause()
+        mapView.onResume()
+        locationManager?.removeUpdates(locationListener)
     }
 
     override fun onDestroy() {
-        mapView.onResume()
         super.onDestroy()
+        mapView.onResume()
+        locationManager?.removeUpdates(locationListener)
     }
 
     override fun onItemLongPress(index: Int, item: MarkerItem?): Boolean {
@@ -450,9 +509,8 @@ class MainActivity : AppCompatActivity(),
             if (g is Gesture.Tap) {
                 val tupPos: GeoPoint = mMap.viewport().fromScreenPoint(e!!.x, e.y)
                 lastTap = arrayOf(tupPos.latitude, tupPos.longitude)
-                addMarker()
+                addMarker(lastTap)
                 tapInRoom()
-                mapView.map().getMapPosition(thisPosition)
             }
             if (g is Gesture.LongPress) {
                 lastTap = arrayOf(e!!.x.toDouble(), e.y.toDouble())
