@@ -31,11 +31,14 @@ import org.oscim.layers.OSMIndoorLayer
 import org.oscim.layers.marker.ItemizedLayer
 import org.oscim.layers.marker.MarkerItem
 import org.oscim.layers.marker.MarkerSymbol
+import org.oscim.layers.tile.buildings.BuildingLayer
+import org.oscim.layers.tile.buildings.S3DBTileLayer
 import org.oscim.layers.tile.vector.labeling.LabelLayer
 import org.oscim.test.JeoTest
 import org.oscim.theme.VtmThemes
 import org.oscim.utils.IOUtils
 import org.oscim.theme.styles.TextStyle
+import org.oscim.tiling.TileSource
 import java.io.*
 import kotlin.collections.ArrayList
 
@@ -138,6 +141,9 @@ class MainActivity : AppCompatActivity(),
         }
 
         mMap!!.setTheme(VtmThemes.DEFAULT)
+
+        //mMap!!.layers().add(BuildingLayer(mMap, mBaseLayer))
+        //mMap!!.layers().add(S3DBTileLayer(mMap, mTileSource))
         mMap!!.layers().add(LabelLayer(mMap, mBaseLayer))
         ////////////////////////////////////////
 
